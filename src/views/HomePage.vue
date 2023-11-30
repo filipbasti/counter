@@ -148,6 +148,7 @@ export default {
       () => this.gameData,
 
       () => {
+        console.log(gameData);
         this.updateFirestoreDocument(this.gameData);
         localStorage.setItem("gameData", JSON.stringify(this.gameData));
       },

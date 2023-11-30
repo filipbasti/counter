@@ -8,7 +8,6 @@ const firestoreMethods = {
       const docRef = await addDoc(collection(db, "players"), gameData);
       localStorage.setItem("thisGameId", docRef.id);
       console.log("Document written with ID: ", docRef.id);
-      window.location.reload();
     } catch (e) {
       console.error("Error adding document: ", e);
     }
@@ -16,16 +15,12 @@ const firestoreMethods = {
 
   async updateFirestoreDocument(gameData) {
     const docRef = doc(db, "players", localStorage.getItem("thisGameId"));
-
+    const positionUpdates = Object.keys(gameData).map((key) => ({
+      [`${key}.position`]: gameData[key].value,
+    }));
+    const positionUpdateObject = Object.assign({}, ...positionUpdates);
     try {
-      await updateDoc(docRef, {
-        "gameData.player1Name.value": gameData.player1Name.value,
-        "gameData.player2Name.value": gameData.player2Name.value,
-        "gameData.player1Life.value": gameData.player1Life.value,
-        "gameData.player2Life.value": gameData.player2Life.value,
-        "gameData.player1Score.value": gameData.player1Score.value,
-        "gameData.player2Score.value": gameData.player2Score.value,
-      });
+      await updateDoc(docRef, positionUpdateObject);
 
       console.log("Document successfully updated!");
     } catch (error) {

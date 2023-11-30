@@ -84,31 +84,25 @@ export default {
     async watcher() {
       (this.id = this.$route.params.id),
         onSnapshot(doc(db, "players", this.id), (doc) => {
-          this.entryData = {
-            ...doc.data().gameData,
-          };
+          this.entryData = doc.data();
         });
     },
     async getInitial() {
       const docRef = doc(db, "players", this.$route.params.id);
+      console.log(this.$route.params.id);
       const docSnap = await getDoc(docRef);
 
-      this.entryData = { ...docSnap.data().gameData };
+      this.entryData = docSnap.data();
     },
     async rememberPosition() {
       const docRef = doc(db, "players", this.id);
 
       try {
-        await updateDoc(docRef, {
-          "gameData.player1Name.position": this.entryData.player1Name.position,
-          "gameData.player2Name.position": this.entryData.player2Name.position,
-          "gameData.player1Life.position": this.entryData.player1Life.position,
-          "gameData.player2Life.position": this.entryData.player2Life.position,
-          "gameData.player1Score.position":
-            this.entryData.player1Score.position,
-          "gameData.player2Score.position":
-            this.entryData.player2Score.position,
-        });
+        const positionUpdates = Object.keys(this.entryData).map((key) => ({
+          [`${key}.position`]: this.entryData[key].position,
+        }));
+        const positionUpdateObject = Object.assign({}, ...positionUpdates);
+        await updateDoc(docRef, positionUpdateObject);
       } catch (error) {
         console.error("Error updating document: ", error);
       }
