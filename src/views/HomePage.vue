@@ -144,6 +144,7 @@ export default {
     this.initializeGame();
 
     if (!this.thisGameId) this.savePlayerData(this.gameData);
+
     watch(
       () => this.gameData,
 

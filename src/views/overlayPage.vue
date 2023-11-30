@@ -49,12 +49,13 @@ import Vue3DraggableResizable from "vue3-draggable-resizable";
 import "vue3-draggable-resizable/dist/Vue3DraggableResizable.css";
 import firestoreMethods from "../handlers/firestoreHandlers";
 import { Compact } from "@lk77/vue3-color";
+import db from "../firestore";
+import { onSnapshot, doc } from "firebase/firestore";
 export default {
   // Use the $route to access the dynamic parameter
   async mounted() {
     this.entryData = await this.getInitial(this.$route.params.id);
-    //await this.watcher(this.$route.params.id, this.entryData);
-    console.log("u frontu" + JSON.stringify(this.entryData));
+    await this.watcher(this.$route.params.id);
   },
   components: {
     Vue3DraggableResizable,
@@ -79,6 +80,11 @@ export default {
     calculateFontSize(w, h) {
       const fontSize = Math.min(w, h) / 2;
       return `${fontSize}px`;
+    },
+    async watcher() {
+      onSnapshot(doc(db, "players", this.id), (doc) => {
+        this.entryData = doc.data();
+      });
     },
     ...firestoreMethods,
   },

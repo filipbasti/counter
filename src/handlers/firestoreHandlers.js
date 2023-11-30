@@ -1,12 +1,5 @@
 import db from "../firestore"; // Adjust the path if your firebase.js file is in a different directory
-import {
-  addDoc,
-  collection,
-  doc,
-  updateDoc,
-  getDoc,
-  onSnapshot,
-} from "firebase/firestore";
+import { addDoc, collection, doc, updateDoc, getDoc } from "firebase/firestore";
 
 const firestoreMethods = {
   async savePlayerData(gameData) {
@@ -14,6 +7,7 @@ const firestoreMethods = {
       console.log("uspjeh");
       const docRef = await addDoc(collection(db, "players"), gameData);
       localStorage.setItem("thisGameId", docRef.id);
+      window.location.reload();
       console.log("Document written with ID: ", docRef.id);
     } catch (e) {
       console.error("Error adding document: ", e);
@@ -23,7 +17,7 @@ const firestoreMethods = {
   async updateFirestoreDocument(gameData) {
     const docRef = doc(db, "players", localStorage.getItem("thisGameId"));
     const positionUpdates = Object.keys(gameData).map((key) => ({
-      [`${key}.position`]: gameData[key].value,
+      [`${key}.value`]: gameData[key].value,
     }));
     const positionUpdateObject = Object.assign({}, ...positionUpdates);
     try {
@@ -54,13 +48,6 @@ const firestoreMethods = {
     } catch (error) {
       console.error("Error updating document: ", error);
     }
-  },
-  async watcher(id, entryData) {
-    (id = this.$route.params.id),
-      onSnapshot(doc(db, "players", id), (doc) => {
-        entryData = doc.data();
-      });
-    console.log(entryData);
   },
 };
 
