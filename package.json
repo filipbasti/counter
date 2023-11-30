@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@lk77/vue3-color": "^3.0.6",
     "@programic/vue3-tooltip": "^1.0.0",
     "core-js": "^3.8.3",
     "firebase": "^10.6.0",

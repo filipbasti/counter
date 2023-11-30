@@ -1,22 +1,26 @@
 <template>
   <div>
     <img src="https://i.imgur.com/moqON4T.png" width="1920" height="1080" />
-    <h2>User Details</h2>
+    <h2>Pick color</h2>
     <p>User ID: {{ $route.params.id }}</p>
+    <compact-picker
+      v-model="colors"
+      class="np-mb"
+      @update:modelValue="changeColor()"
+    />
     <!-- Fetch user details based on the ID and display them -->
-    <p v-for="(value, key) in entryData" v-bind:key="key">
-      {{ key }} : {{ value }}
-    </p>
+
     <div v-for="(value, key) in entryData" v-bind:key="key">
       <Vue3DraggableResizable
         v-model:x="value.position.x"
         v-model:y="value.position.y"
         v-model:w="value.position.w"
         v-model:h="value.position.h"
-        :initW="110"
-        :initH="120"
+        :init-h="110"
+        :init-w="100"
         :draggable="true"
         :resizable="true"
+        @activated="temp = key"
         @drag-start="active = true"
         @drag-end="(active = false), rememberPosition()"
         @resize-end="rememberPosition()"
@@ -24,6 +28,7 @@
         <p
           :style="{
             fontSize: calculateFontSize(value.position.w, value.position.h),
+            color: value.position.color,
           }"
           data-bs-toggle="tooltip"
           data-bs-title="Default tooltip"
@@ -34,17 +39,9 @@
       </Vue3DraggableResizable>
     </div>
   </div>
-  <button
-    type="button"
-    class="btn btn-secondary"
-    data-bs-toggle="tooltip"
-    data-bs-placement="top"
-    data-bs-title="This top tooltip is themed via CSS variables."
-  >
-    Custom tooltip
-  </button>
+  <button>promjeni boju aktivnog</button>
 </template>
-
+<style scoped></style>
 <script>
 //v-for="(value, key) in entryData"
 import Vue3DraggableResizable from "vue3-draggable-resizable";
@@ -52,40 +49,54 @@ import Vue3DraggableResizable from "vue3-draggable-resizable";
 import "vue3-draggable-resizable/dist/Vue3DraggableResizable.css";
 import db from "../firestore";
 import { doc, onSnapshot } from "firebase/firestore";
-
-import { updateDoc } from "firebase/firestore";
+import { updateDoc, getDoc } from "firebase/firestore";
+import { Compact } from "@lk77/vue3-color";
 export default {
   // Use the $route to access the dynamic parameter
   async mounted() {
-    (this.id = this.$route.params.id),
-      onSnapshot(doc(db, "players", this.id), (doc) => {
-        const source = doc.metadata.hasPendingWrites ? "Local" : "Server";
-        this.entryData = {
-          ...doc.data().gameData,
-        };
-        console.log(source, " data: ", doc.data());
-      });
+    this.getInitial();
+    this.watcher();
   },
   components: {
     Vue3DraggableResizable,
+    "compact-picker": Compact,
   },
   data() {
     return {
       active: false,
       id: "",
       entryData: {},
+      temp: "",
+      colors: {},
     };
   },
   methods: {
-    print(val) {
-      console.log(val);
+    changeColor() {
+      if (this.temp) {
+        this.entryData[this.temp].position.color = this.colors.hex;
+        this.rememberPosition();
+      } else alert("Izaberi sta hoces mijenjat");
     },
     calculateFontSize(w, h) {
       const fontSize = Math.min(w, h) / 2;
       return `${fontSize}px`;
     },
+    async watcher() {
+      (this.id = this.$route.params.id),
+        onSnapshot(doc(db, "players", this.id), (doc) => {
+          this.entryData = {
+            ...doc.data().gameData,
+          };
+        });
+    },
+    async getInitial() {
+      const docRef = doc(db, "players", this.$route.params.id);
+      const docSnap = await getDoc(docRef);
+
+      this.entryData = { ...docSnap.data().gameData };
+    },
     async rememberPosition() {
-      const docRef = doc(db, "players", localStorage.getItem("thisGameId"));
+      const docRef = doc(db, "players", this.id);
 
       try {
         await updateDoc(docRef, {
@@ -98,8 +109,6 @@ export default {
           "gameData.player2Score.position":
             this.entryData.player2Score.position,
         });
-
-        console.log("Document successfully updated!");
       } catch (error) {
         console.error("Error updating document: ", error);
       }
