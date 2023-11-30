@@ -22,8 +22,8 @@
         :resizable="true"
         @activated="temp = key"
         @drag-start="active = true"
-        @drag-end="(active = false), rememberPosition()"
-        @resize-end="rememberPosition()"
+        @drag-end="(active = false), rememberPosition(this.id, this.entryData)"
+        @resize-end="rememberPosition(this.id, entryData)"
       >
         <p
           :style="{
@@ -47,15 +47,14 @@
 import Vue3DraggableResizable from "vue3-draggable-resizable";
 //default styles
 import "vue3-draggable-resizable/dist/Vue3DraggableResizable.css";
-import db from "../firestore";
-import { doc, onSnapshot } from "firebase/firestore";
-import { updateDoc, getDoc } from "firebase/firestore";
+import firestoreMethods from "../handlers/firestoreHandlers";
 import { Compact } from "@lk77/vue3-color";
 export default {
   // Use the $route to access the dynamic parameter
   async mounted() {
-    this.getInitial();
-    this.watcher();
+    this.entryData = await this.getInitial(this.$route.params.id);
+    //await this.watcher(this.$route.params.id, this.entryData);
+    console.log("u frontu" + JSON.stringify(this.entryData));
   },
   components: {
     Vue3DraggableResizable,
@@ -64,7 +63,7 @@ export default {
   data() {
     return {
       active: false,
-      id: "",
+      id: this.$route.params.id,
       entryData: {},
       temp: "",
       colors: {},
@@ -74,39 +73,14 @@ export default {
     changeColor() {
       if (this.temp) {
         this.entryData[this.temp].position.color = this.colors.hex;
-        this.rememberPosition();
+        this.rememberPosition(this.id, this.entryData);
       } else alert("Izaberi sta hoces mijenjat");
     },
     calculateFontSize(w, h) {
       const fontSize = Math.min(w, h) / 2;
       return `${fontSize}px`;
     },
-    async watcher() {
-      (this.id = this.$route.params.id),
-        onSnapshot(doc(db, "players", this.id), (doc) => {
-          this.entryData = doc.data();
-        });
-    },
-    async getInitial() {
-      const docRef = doc(db, "players", this.$route.params.id);
-      console.log(this.$route.params.id);
-      const docSnap = await getDoc(docRef);
-
-      this.entryData = docSnap.data();
-    },
-    async rememberPosition() {
-      const docRef = doc(db, "players", this.id);
-
-      try {
-        const positionUpdates = Object.keys(this.entryData).map((key) => ({
-          [`${key}.position`]: this.entryData[key].position,
-        }));
-        const positionUpdateObject = Object.assign({}, ...positionUpdates);
-        await updateDoc(docRef, positionUpdateObject);
-      } catch (error) {
-        console.error("Error updating document: ", error);
-      }
-    },
+    ...firestoreMethods,
   },
 };
 </script>
