@@ -1,6 +1,6 @@
 <template>
   <div>
-    <img src="https://i.imgur.com/moqON4T.png" width="1920" height="1080" />
+    <img :src="overlaylink" width="1920" height="1080" />
     <h2>Pick color</h2>
     <p>User ID: {{ $route.params.id }}</p>
     <compact-picker
@@ -38,8 +38,28 @@
         <p v-if="active">{{ key }}</p>
       </Vue3DraggableResizable>
     </div>
+    <h2>Change overlay</h2>
+    <div class="input-group mb-3">
+      <input
+        type="text"
+        class="form-control"
+        :placeholder="overlaylink"
+        aria-label="Recipient's username"
+        aria-describedby="basic-addon2"
+        v-model="templink"
+      />
+
+      <div class="input-group-append">
+        <button
+          class="btn btn-outline-secondary"
+          type="button"
+          @click="changeImage()"
+        >
+          New overlay
+        </button>
+      </div>
+    </div>
   </div>
-  <button>promjeni boju aktivnog</button>
 </template>
 <style scoped></style>
 <script>
@@ -68,6 +88,8 @@ export default {
       entryData: {},
       temp: "",
       colors: {},
+      overlaylink: "https://i.imgur.com/moqON4T.png",
+      templink: "",
     };
   },
   methods: {
@@ -85,8 +107,18 @@ export default {
       onSnapshot(doc(db, "players", this.id), (doc) => {
         this.entryData = doc.data();
       });
+      onSnapshot(doc(db, "overlays", this.id), (doc) => {
+        this.overlaylink = doc.data().overlaylink;
+        console.log(this.overlaylink);
+      });
     },
     ...firestoreMethods,
+    changeImage() {
+      // Update the image source
+
+      this.updateURL(this.id, this.templink);
+      console.log("update sucessful");
+    },
   },
 };
 </script>

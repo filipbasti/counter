@@ -1,5 +1,12 @@
 import db from "../firestore"; // Adjust the path if your firebase.js file is in a different directory
-import { addDoc, collection, doc, updateDoc, getDoc } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  doc,
+  updateDoc,
+  getDoc,
+  setDoc,
+} from "firebase/firestore";
 
 const firestoreMethods = {
   async savePlayerData(gameData) {
@@ -31,9 +38,7 @@ const firestoreMethods = {
 
   async getInitial(id) {
     const docRef = doc(db, "players", id);
-
     const docSnap = await getDoc(docRef);
-
     return docSnap.data();
   },
   async rememberPosition(id, entryData) {
@@ -47,6 +52,14 @@ const firestoreMethods = {
       await updateDoc(docRef, positionUpdateObject);
     } catch (error) {
       console.error("Error updating document: ", error);
+    }
+  },
+  async updateURL(id, URL) {
+    const docRef = doc(db, "overlays", id);
+    try {
+      await setDoc(docRef, { overlaylink: URL });
+    } catch (error) {
+      console.log(error);
     }
   },
 };
